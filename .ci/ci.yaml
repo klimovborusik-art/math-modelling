@@ -147,7 +147,7 @@ jobs:
     displayName: 'Build'
 
   - bash: |
-      build/Release/numercial_methods_server.exe &
+      build/Release/numerical_methods_server.exe &
       sleep 3 && build/Release/numerical_methods_test.exe
     displayName: 'Run tests'
 

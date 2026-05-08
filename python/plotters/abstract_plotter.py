@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import json
 
+
 class AbstractPlotter(ABC):
     def __init__(self, json_data_path, output_path):
         self.output_path = output_path
@@ -11,4 +12,3 @@ class AbstractPlotter(ABC):
     @abstractmethod
     def plot(self):
         pass
-
