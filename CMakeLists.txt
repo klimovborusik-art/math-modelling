@@ -1,5 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
-
+cmake_minimum_required(VERSION 3.14)
 project(math-modelling CXX)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -14,7 +13,7 @@ set(MATH_MODELLING_INCLUDE_DIRS "include")
 find_package(Httplib)
 
 if (NOT HTTPLIB_INCLUDE_DIR)
-  file(DOWNLOAD https://github.com
+  file(DOWNLOAD https://github.com/yhirose/cpp-httplib/archive/refs/tags/v0.8.8.tar.gz
       "${CMAKE_BINARY_DIR}/deps/cpp-httplib-v0.8.8.tar.gz"
       STATUS HTTPLIB_DOWNLOAD_STATUS_LIST LOG HTTPLIB_DOWNLOAD_LOG
       SHOW_PROGRESS)
@@ -26,36 +25,42 @@ if (NOT HTTPLIB_INCLUDE_DIR)
         tar xzf "${CMAKE_BINARY_DIR}/deps/cpp-httplib-v0.8.8.tar.gz"
         WORKING_DIRECTORY "${CMAKE_BINARY_DIR}/deps/")
 
-    # Исправленный эталонный поиск: ищем строго заголовочный файл внутри распакованной папки
-    file(GLOB_RECURSE HTTPLIB_FILES "${CMAKE_BINARY_DIR}/deps/cpp-httplib-*/httplib.h")
-    
-    if (HTTPLIB_FILES)
-      list(GET HTTPLIB_FILES 0 FIRST_HTTPLIB_FILE)
-      get_filename_component(HTTPLIB_INCLUDE_DIR "${FIRST_HTTPLIB_FILE}" DIRECTORY)
+  file (GLOB HTTPLIB_DIRECTORIES RELATIVE "${CMAKE_BINARY_DIR}/deps/"
+        "${CMAKE_BINARY_DIR}/deps/cpp-httplib-[0-9]*.[0-9]*.[0-9]*")
 
+    if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.6.0")
+      list(FILTER HTTPLIB_DIRECTORIES EXCLUDE REGEX "cpp-httplib-.*\.tar\.gz")
+    endif ()
+
+    list(LENGTH HTTPLIB_DIRECTORIES HTTPLIB_DIRECTORIES_LEN)
+
+    if (HTTPLIB_DIRECTORIES_LEN EQUAL 1)
+      list(GET HTTPLIB_DIRECTORIES 0 HTTPLIB_INCLUDE_DIR)
+
+      set(HTTPLIB_INCLUDE_DIR "${CMAKE_BINARY_DIR}/deps/${HTTPLIB_INCLUDE_DIR}")
       set(MATH_MODELLING_INCLUDE_DIRS ${MATH_MODELLING_INCLUDE_DIRS} "${HTTPLIB_INCLUDE_DIR}")
-      message(STATUS "Successfully downloaded httplib into ${HTTPLIB_INCLUDE_DIR}/")
-    else ()
-      message(FATAL_ERROR "Problem unpacking httplib! Cannot find httplib.h inside deps.")
+   message(STATUS 
+    "Successfully downloaded httplib into ${CMAKE_BINARY_DIR}/deps/${HTTPLIB_INCLUDE_DIR}/")    else ()
+      message(FATAL_ERROR "Problem unpacking httplib!"
+          "  Expected only one directory cpp-httplib-x.y.z/; found ${HTTPLIB_DIRECTORIES}."
+          " Try removing the directory ${CMAKE_BINARY_DIR}/deps and reconfiguring.")
     endif ()
   else ()
     list(GET HTTPLIB_DOWNLOAD_STATUS_LIST 1 HTTPLIB_DOWNLOAD_ERROR)
     message(FATAL_ERROR
-        "Could not download httplib! Error code ${HTTPLIB_DOWNLOAD_STATUS}: ${HTTPLIB_DOWNLOAD_ERROR}!")
+        "Could not download httplib! Error code ${HTTPLIB_DOWNLOAD_STATUS}: ${HTTPLIB_DOWNLOAD_ERROR}!"
+        "  Error log: ${HTTPLIB_DOWNLOAD_LOG}")
   endif ()
 else ()
   set(MATH_MODELLING_INCLUDE_DIRS ${MATH_MODELLING_INCLUDE_DIRS} "${HTTPLIB_INCLUDE_DIR}")
 endif ()
 
-# ====================================================================
-# ЭТАЛОННЫЙ АВТОМАТИЧЕСКИЙ БЛОК ДЛЯ ЗАГРУЗКИ БИБЛИОТЕКИ NLOHMANN JSON
-# ====================================================================
 find_package(NlohmannJson)
 
 if (NOT NLOHMANN_JSON_INCLUDE_DIR)
   set(NLOHMANN_JSON_DIR "nlohmann-json-3.9.1")
 
-  file(DOWNLOAD https://github.com
+  file(DOWNLOAD https://github.com/nlohmann/json/releases/download/v3.9.1/json.hpp
       "${CMAKE_BINARY_DIR}/deps/${NLOHMANN_JSON_DIR}/nlohmann/json.hpp"
       STATUS NLOHMANN_JSON_DOWNLOAD_STATUS_LIST LOG NLOHMANN_JSON_DOWNLOAD_LOG
       SHOW_PROGRESS)
@@ -63,19 +68,27 @@ if (NOT NLOHMANN_JSON_INCLUDE_DIR)
   list(GET NLOHMANN_JSON_DOWNLOAD_STATUS_LIST 0 NLOHMANN_JSON_DOWNLOAD_STATUS)
 
   if (NLOHMANN_JSON_DOWNLOAD_STATUS EQUAL 0)
+
     file(SHA256 "${CMAKE_BINARY_DIR}/deps/${NLOHMANN_JSON_DIR}/nlohmann/json.hpp" NLOHMANN_JSON_LOCAL_HASH)
+
     set(NLOHMANN_JSON_EXPECTED_HASH "7804b38146921d03374549c9e2a5e3acda097814c43caf2b96a0278e58df26e0")
 
     if (NLOHMANN_JSON_LOCAL_HASH STREQUAL NLOHMANN_JSON_EXPECTED_HASH)
       set(NLOHMANN_JSON_INCLUDE_DIR "${CMAKE_BINARY_DIR}/deps/${NLOHMANN_JSON_DIR}")
+
       set(MATH_MODELLING_INCLUDE_DIRS ${MATH_MODELLING_INCLUDE_DIRS} "${NLOHMANN_JSON_INCLUDE_DIR}")
-      message(STATUS "Successfully downloaded nlohmann json into ${CMAKE_BINARY_DIR}/deps/${NLOHMANN_JSON_DIR}/")
+
+       message(STATUS
+          "Successfully downloaded nlohmann json into ${CMAKE_BINARY_DIR}/deps/${NLOHMANN_JSON_DIR}/")
     else ()
-      message(FATAL_ERROR "Error checking hash for nlohmann json!")
-    endif ()
+     message(FATAL_ERROR "Error checking hash for nlohmann json!"
+        " Try removing the directory ${CMAKE_BINARY_DIR}/deps and reconfiguring.")   
+  endif ()
   else ()
     list(GET NLOHMANN_JSON_DOWNLOAD_STATUS_LIST 1 NLOHMANN_JSON_DOWNLOAD_ERROR)
-    message(FATAL_ERROR "Could not download json! Error: ${NLOHMANN_JSON_DOWNLOAD_ERROR}")
+   message(FATAL_ERROR
+        "Could not download httplib! Error code ${NLOHMANN_JSON_DOWNLOAD_STATUS}: ${NLOHMANN_JSON_DOWNLOAD_ERROR}!"
+        "  Error log: ${NLOHMANN_JSON_DOWNLOAD_LOG}")
   endif ()
 else ()
   set(MATH_MODELLING_INCLUDE_DIRS ${MATH_MODELLING_INCLUDE_DIRS} "${NLOHMANN_JSON_INCLUDE_DIR}")
