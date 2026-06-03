@@ -2,10 +2,12 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 class ImplicitHeatConductionSolverPlotter:
     """
     Класс для визуализации результатов неявной схемы теплопроводности.
     """
+
     def __init__(self):
         pass
 
@@ -31,19 +33,19 @@ class ImplicitHeatConductionSolverPlotter:
 
         # Отрисовка тепловой карты
         plt.figure(figsize=(7, 6))
-        mesh = plt.pcolormesh(X, Y, u_matrix, cmap='plasma', shading='auto')
-        
+        mesh = plt.pcolormesh(X, Y, u_matrix, cmap="plasma", shading="auto")
+
         # Настройка цветовой шкалы и подписей
-        plt.colorbar(mesh, label='Температура u(x, y)')
-        plt.title('Распределение тепла (Неявная схема Якоби)')
-        plt.xlabel('Координата X')
-        plt.ylabel('Координата Y')
-        plt.grid(True, linestyle='--', alpha=0.5)
+        plt.colorbar(mesh, label="Температура u(x, y)")
+        plt.title("Распределение тепла (Неявная схема Якоби)")
+        plt.xlabel("Координата X")
+        plt.ylabel("Координата Y")
+        plt.grid(True, linestyle="--", alpha=0.5)
 
         # Сохранение графика в папку вывода
         os.makedirs(output_dir, exist_ok=True)
-        output_path = os.path.join(output_dir, 'implicit_heat_conduction.png')
-        plt.savefig(output_path, dpi=150, bbox_inches='tight')
+        output_path = os.path.join(output_dir, "implicit_heat_conduction.png")
+        plt.savefig(output_path, dpi=150, bbox_inches="tight")
         plt.close()
-        
+
         print(f" График успешно сохранен: {output_path}")
