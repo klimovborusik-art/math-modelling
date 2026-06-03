@@ -22,7 +22,8 @@ class ImplicitHeatConductionSolverPlotter:
         M = data_json["M"]
         fn = data_json["fn"]
 
-        # Восстанавливаем двумерную матрицу (M + 1) x (M + 1) из одномерного массива
+        # Восстанавливаем двумерную матрицу (M + 1) x (M + 1) из одномерного
+        # массива
         grid_size = M + 1
         u_matrix = np.array(fn).reshape((grid_size, grid_size))
 
@@ -44,8 +45,10 @@ class ImplicitHeatConductionSolverPlotter:
 
         # Сохранение графика в папку вывода
         os.makedirs(output_dir, exist_ok=True)
-        output_path = os.path.join(output_dir, "implicit_heat_conduction.png")
+        output_path = os.path.join(
+            output_dir, "implicit_heat_conduction.png")
         plt.savefig(output_path, dpi=150, bbox_inches="tight")
         plt.close()
 
         print(f" График успешно сохранен: {output_path}")
+        

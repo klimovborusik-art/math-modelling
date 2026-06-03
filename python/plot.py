@@ -8,7 +8,9 @@ from plotters.heat_conduction_reference_example_solver import (
 )
 
 # Добавляем импорт нашего плоттера
-from plotters.implicit_heat_conduction_solver import ImplicitHeatConductionSolverPlotter
+from plotters.implicit_heat_conduction_solver import (
+    ImplicitHeatConductionSolverPlotter,
+)
 
 
 def main():
@@ -25,7 +27,8 @@ def main():
         data = json.load(f)
 
     # Определяем тип алгоритма (извлекается из структуры данных или аргументов)
-    algorithm_type = data.get("algorithm_type", "ImplicitHeatConductionSolver")
+    algorithm_type = data.get(
+        "algorithm_type", "ImplicitHeatConductionSolver")
     output_directory = "output"
 
     if algorithm_type == "HeatConductionReferenceExampleSolver":
@@ -43,3 +46,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    
