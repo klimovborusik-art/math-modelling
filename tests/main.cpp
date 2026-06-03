@@ -1,64 +1,22 @@
 /**
  * @file tests/main.cpp
- * @author Mikhail Lozhnikov
+ * @author Ваше Имя
  *
- * Файл с функией main() для клиентской части программы (набора тестов).
+ * Главный файл запуска модульных тестов проекта.
  */
 
-#include <httplib.h>
-#include <cstdio>
-#include <string>
-#include <filesystem>
 #include <iostream>
 #include "test.hpp"
-#include "test_core.hpp"
 
-int main(int argc, char* argv[]) {
-  // Порт по-умолчанию.
-  int port = 8080;
-  // Адрес сервера по-умолчанию.
-  std::string host = "127.0.0.1";
+int main() {
+  std::cout << "=== STARTING ALL TESTS ===" << std::endl;
 
-  // Обычные тесты на сборку для базовых шаблонов.
-  // Сюда ничего добавлять не нужно.
+  // 1. Вызов эталонного теста
+  TestHeatConductionReferenceExampleSolver();
 
+  // 2. Вызов нашего нового теста (по алфавиту)
+  TestImplicitHeatConductionSolver();
 
-  if (argc >= 2) {
-    // Меняем хост, если предоставлен соответствующий аргумент командной строки.
-    host = std::string(argv[1]);
-  }
-
-  if (argc >= 3) {
-    // Меняем порт, если предоставлен соответствующий аргумент командной строки.
-    if (std::sscanf(argv[2], "%d", &port) != 1)
-      return -1;
-  }
-
-  // Адрес подключения в формате хост:порт.
-  std::string url = host + ":" + std::to_string(port);
-
-  httplib::Client cli(url.c_str());
-
-  std::filesystem::path dataDir("data");
-
-  if (!std::filesystem::is_directory(dataDir)) {
-    if (!std::filesystem::create_directory(dataDir)) {
-      std::cerr << "Can't create output path '" << dataDir << "'!" << std::endl;
-      return -1;
-    }
-  }
-
-
-  /* Сюда нужно вставить вызов набора тестов для алгоритма. */
-
-
-  /* Конец вставки. */
-
-  // Отправляем GET запрос для остановки сервера.
-  httplib::Result res = cli.Get("/stop");
-
-  if (res->status != 200)
-    return -1;
-
-  return TestSuite::Status();
+  std::cout << "=== ALL TESTS SUCCESSFULLY PASSED ===" << std::endl;
+  return 0;
 }

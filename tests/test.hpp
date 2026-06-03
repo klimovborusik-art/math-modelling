@@ -1,18 +1,21 @@
 /**
  * @file tests/test.hpp
- * @author Mikhail Lozhnikov
+ * @author BorisKlimov
  *
- * Заголовочный файл для объявлений основных тестовых функций.
+ * Заголовочный файл со списками прототипов тестов.
  */
 
-#ifndef TESTS_TEST_HPP_
-#define TESTS_TEST_HPP_
+#ifndef TEST_HPP_
+#define TEST_HPP_
 
-#include <httplib.h>
+/**
+ *  Тест эталонного примера явной схемы теплопроводности.
+ */
+void TestHeatConductionReferenceExampleSolver();
 
-/* Сюда нужно добавить объявления тестовых функций. */
+/**
+ *  Тест нашего нового алгоритма неявной схемы теплопроводности.
+ */
+void TestImplicitHeatConductionSolver();
 
-
-/* Конец вставки. */
-
-#endif  // TESTS_TEST_HPP_
+#endif // TEST_HPP_
