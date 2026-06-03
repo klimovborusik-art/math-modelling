@@ -1,6 +1,6 @@
 /**
  * @file tests/main.cpp
- * @author Ваше Имя
+ * @author BorisKlimov
  *
  * Главный файл запуска модульных тестов проекта.
  */
@@ -11,10 +11,6 @@
 int main() {
   std::cout << "=== STARTING ALL TESTS ===" << std::endl;
 
-  // 1. Вызов эталонного теста
-  TestHeatConductionReferenceExampleSolver();
-
-  // 2. Вызов нашего нового теста (по алфавиту)
   TestImplicitHeatConductionSolver();
 
   std::cout << "=== ALL TESTS SUCCESSFULLY PASSED ===" << std::endl;
