@@ -5,8 +5,8 @@
  * Заголовочный файл со списками прототипов тестов.
  */
 
-#ifndef TEST_HPP_
-#define TEST_HPP_
+#ifndef TESTS_TEST_HPP_
+#define TESTS_TEST_HPP_
 
 /**
  *  Тест эталонного примера явной схемы теплопроводности.
@@ -18,4 +18,4 @@ void TestHeatConductionReferenceExampleSolver();
  */
 void TestImplicitHeatConductionSolver();
 
-#endif // TEST_HPP_
+#endif  // TESTS_TEST_HPP_

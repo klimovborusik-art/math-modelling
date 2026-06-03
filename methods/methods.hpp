@@ -5,8 +5,8 @@
  * Объявления серверных методов (парсеров) для алгоритмов.
  */
 
-#ifndef METHODS_HPP_
-#define METHODS_HPP_
+#ifndef METHODS_METHODS_HPP_
+#define METHODS_METHODS_HPP_
 
 #include <nlohmann/json.hpp>
 #include "tasks_queue.hpp"
@@ -43,6 +43,6 @@ int ImplicitHeatConductionSolverMethod(
   nlohmann::json* output,
   TasksQueue* tasksQueue);
 
-} // namespace mm
+}  // namespace mm
 
-#endif // METHODS_HPP_
+#endif  // METHODS_METHODS_HPP_

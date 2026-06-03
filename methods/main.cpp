@@ -5,7 +5,9 @@
  * Точка входа для веб-сервера математического моделирования.
  */
 
+#include <cstdlib>
 #include <iostream>
+#include <string>
 #include <httplib.h>
 #include <nlohmann/json.hpp>
 #include "methods.hpp"
@@ -26,33 +28,33 @@ int main(int argc, char* argv[]) {
   httplib::Server svr;
   mm::TasksQueue tasksQueue;
 
-  std::cout << "[SERVER] Starting math server on " 
+  std::cout << "[SERVER] Starting math server on "
             << host << ":" << port << "..." << std::endl;
 
   svr.Post("/HeatConductionReferenceExampleSolver",
     [&](const httplib::Request& req, httplib::Response& res) {
       nlohmann::json input = nlohmann::json::parse(req.body);
       nlohmann::json output;
-      
+
       if (mm::HeatConductionReferenceExampleSolverMethod(
             input, &output, &tasksQueue) < 0) {
         res.status = 400;
       }
-      
+
       res.set_content(output.dump(), "application/json");
     });
 
-  // 2. Обработчик для неявной схемы 
+  // 2. Обработчик для неявной схемы
   svr.Post("/ImplicitHeatConductionSolver",
     [&](const httplib::Request& req, httplib::Response& res) {
       nlohmann::json input = nlohmann::json::parse(req.body);
       nlohmann::json output;
-      
+
       if (mm::ImplicitHeatConductionSolverMethod(
             input, &output, &tasksQueue) < 0) {
         res.status = 400;
       }
-      
+
       res.set_content(output.dump(), "application/json");
     });
 

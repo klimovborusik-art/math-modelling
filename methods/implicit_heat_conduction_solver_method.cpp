@@ -26,17 +26,16 @@ int ImplicitHeatConductionSolverMethod(
   const nlohmann::json& input,
   nlohmann::json* output,
   TasksQueue* tasksQueue) {
-  
   std::string valueType = input.at("value_type");
-  
+
   if (valueType == "float") {
     return ImplicitHeatConductionSolverMethodHelper
       <float, FloatAbstractSolverWrapper>(input, output, tasksQueue);
   } else if (valueType == "double") {
-    return ImplicitHeatConductionSolverMethodHelper<
-      double, DoubleAbstractSolverWrapper>(input, output, tasksQueue);
+    return ImplicitHeatConductionSolverMethodHelper
+      <double, DoubleAbstractSolverWrapper>(input, output, tasksQueue);
   }
-  
+
   return -1;
 }
 
@@ -49,28 +48,27 @@ int ImplicitHeatConductionSolverMethodHelper(
   const nlohmann::json& input,
   nlohmann::json* output,
   TasksQueue* tasksQueue) {
-  
   ImplicitHeatConductionSolver<T>* solver;
-  
+
   T tau = input.at("tau");
   T finishTime = input.at("finish_time");
   T exportPeriod = input.at("export_period");
   int M = input.at("M");
-  
+
   if (M < 0 || tau < 0 || finishTime < 0) {
     return -1;
   }
-  
+
   solver = new ImplicitHeatConductionSolver<T>(
     tau, finishTime, exportPeriod, M);
-    
+
   Wrapper* wrapper = new Wrapper(solver);
   int taskId = tasksQueue->AddTask(wrapper);
-  
+
   (*output)["id"] = taskId;
   (*output)["status"] = "ok";
-  
+
   return 0;
 }
 
-} // namespace mm
+}  // namespace mm
