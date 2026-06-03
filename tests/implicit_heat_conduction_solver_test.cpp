@@ -5,11 +5,11 @@
  * Набор модульных тестов для неявного метода теплопроводности.
  */
 
-#include "test.hpp"
 #include <cassert>
 #include <cmath>
 #include <iostream>
 #include <random>
+#include "test.hpp"
 #include <implicit_heat_conduction_solver.hpp>
 
 void TestImplicitHeatConductionSolver() {

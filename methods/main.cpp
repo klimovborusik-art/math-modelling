@@ -5,13 +5,13 @@
  * Точка входа для веб-сервера математического моделирования.
  */
 
-#include <cstdlib>
 #include <httplib.h>
 #include <iostream>
-#include <nlohmann/json.hpp>
+#include <cstdlib>
 #include <string>
-#include "methods.hpp"
+#include <nlohmann/json.hpp>
 #include "tasks_queue.hpp"
+#include "methods.hpp"
 
 int main(int argc, char* argv[]) {
   // По умолчанию сервер слушает порт 8080 на локальном хосте
