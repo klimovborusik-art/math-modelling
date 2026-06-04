@@ -47,9 +47,12 @@ int main(int argc, char* argv[]) {
     }
   }
 
-  /* Сюда нужно вставить вызов набора тестов для алгоритма. */
-  TestImplicitHeatConductionSolver(&cli);
-  /* Конец вставки. */
+    /* Сюда нужно вставить вызов набора тестов для алгоритма. */
+    {
+        TestSuite suite("Heat");
+        RUN_TEST(suite, ImplicitHeatConditionSolver);
+    }  
+    /* Конец вставки. */
 
   // Отправляем GET запрос для остановки сервера.
   httplib::Result res = cli.Get("/stop");

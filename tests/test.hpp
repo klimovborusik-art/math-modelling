@@ -16,7 +16,7 @@
  * @brief Набор тестов для класса mm::ImplicitHeatConductionSolver.
  * @param cli Указатель на HTTP клиент.
  */
-void TestImplicitHeatConductionSolver(httplib::Client* cli);
+void TestImplicitHeatConductionSolver();
 
 /* Конец вставки. */
 
