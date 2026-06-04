@@ -2,12 +2,6 @@ import os
 import sys
 import json
 
-# Импорт существующих плоттеров
-from plotters.heat_conduction_reference_example_solver import (
-    HeatConductionReferenceExampleSolverPlotter,
-)
-
-# Добавляем импорт нашего плоттера
 from plotters.implicit_heat_conduction_solver import (
     ImplicitHeatConductionSolverPlotter,
 )
@@ -31,11 +25,7 @@ def main():
         "algorithm_type", "ImplicitHeatConductionSolver")
     output_directory = "output"
 
-    if algorithm_type == "HeatConductionReferenceExampleSolver":
-        plotter = HeatConductionReferenceExampleSolverPlotter()
-        plotter.plot(data, output_directory)
-
-    elif algorithm_type == "ImplicitHeatConductionSolver":
+    if algorithm_type == "ImplicitHeatConductionSolver":
         # Вызов созданного нами плоттера
         plotter = ImplicitHeatConductionSolverPlotter()
         plotter.plot(data, output_directory)
