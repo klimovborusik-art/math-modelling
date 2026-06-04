@@ -7,49 +7,123 @@
 
 #include <httplib.h>
 #include <iostream>
-#include <cstdlib>
+#include <cstdio>
 #include <string>
 #include <nlohmann/json.hpp>
 #include "tasks_queue.hpp"
 #include "methods.hpp"
 
+using json = nlohmann::json;
+
 int main(int argc, char* argv[]) {
-  // По умолчанию сервер слушает порт 8080 на локальном хосте
-  std::string host = "localhost";
+  // Порт по-умолчанию.
   int port = 8080;
 
-  if (argc > 1) {
-    host = argv[1];
+  if (argc >= 2) {
+    // Меняем порт по умолчанию, если предоставлен соответствующий
+    // аргумент командной строки.
+    if (std::sscanf(argv[1], "%d", &port) != 1)
+      return -1;
   }
-  if (argc > 2) {
-    port = std::atoi(argv[2]);
-  }
+
+  std::cerr << "Listening on port " << port << "..." << std::endl;
 
   httplib::Server svr;
+
   mm::TasksQueue tasksQueue;
 
-  std::cout << "[SERVER] Starting math server on "
-            << host << ":" << port << "..." << std::endl;
+  // Обработчик для GET запроса по адресу /stop. Этот обработчик
+  // останавливает сервер.
+  svr.Get("/stop", [&](const httplib::Request&, httplib::Response&) {
+    svr.stop();
+  });
 
-  // Обработчик для неявной схемы
+
+  svr.Post("/CheckTaskStatus", [&](const httplib::Request& req,
+                                        httplib::Response& res) {
+    /*
+    Поле body структуры httplib::Request содержит текст запроса.
+    Функция nlohmann::json::parse() используется для того,
+    чтобы преобразовать текст в объект типа nlohmann::json.
+    */
+    nlohmann::json input = nlohmann::json::parse(req.body);
+    nlohmann::json output;
+
+    int taskId = input["id"];
+
+    output["id"] = taskId;
+
+    if (tasksQueue.IsTaskFinished(taskId)) {
+      // Задача завершена можно скачивать данные.
+      output["status"] = "finished";
+    } else {
+      /* Задача либо не была добавлена, либо она ещё не досчиталась,
+       * либо она уже посчитана, и данные уже скачаны и удалены с сервера. */
+      output["status"] = "unknown";
+    }
+
+    /*
+    Метод nlohmann::json::dump() используется для сериализации
+    объекта типа nlohmann::json в строку. Метод set_content()
+    позволяет задать содержимое ответа на запрос. Если передаются
+    JSON данные, то MIME тип следует выставить application/json.
+    */
+    res.set_content(output.dump(), "application/json");
+  });
+
+
+  svr.Post("/DownloadTaskData", [&](const httplib::Request& req,
+                                        httplib::Response& res) {
+    /*
+    Поле body структуры httplib::Request содержит текст запроса.
+    Функция nlohmann::json::parse() используется для того,
+    чтобы преобразовать текст в объект типа nlohmann::json.
+    */
+    nlohmann::json input = nlohmann::json::parse(req.body);
+    nlohmann::json output;
+
+    int taskId = input["id"];
+
+    if (tasksQueue.IsTaskFinished(taskId)) {
+      // Задача завершена можно скачивать данные.
+      output = tasksQueue.GetFinishedTaskData(taskId);
+    } else {
+      /* Задача либо не была добавлена, либо она ещё не досчиталась,
+       * либо она уже посчитана, и данные уже скачаны и удалены с сервера. */
+      output["status"] = "unknown";
+    }
+
+    output["id"] = taskId;
+
+    /*
+    Метод nlohmann::json::dump() используется для сериализации
+    объекта типа nlohmann::json в строку. Метод set_content()
+    позволяет задать содержимое ответа на запрос. Если передаются
+    JSON данные, то MIME тип следует выставить application/json.
+    */
+    res.set_content(output.dump(), "application/json");
+  });
+
+
+  /* Сюда нужно вставить обработчик post запроса для алгоритма. */
+
   svr.Post("/ImplicitHeatConductionSolver",
-    [&](const httplib::Request& req, httplib::Response& res) {
-      nlohmann::json input = nlohmann::json::parse(req.body);
-      nlohmann::json output;
+      [&](const httplib::Request& req, httplib::Response& res) {
+    nlohmann::json input = nlohmann::json::parse(req.body);
+    nlohmann::json output;
 
-      if (mm::ImplicitHeatConductionSolverMethod(
-            input, &output, &tasksQueue) < 0) {
-        res.status = 400;
-      }
+    if (mm::ImplicitHeatConductionSolverMethod(input, &output,
+        &tasksQueue) < 0)
+      res.status = 400;
 
-      res.set_content(output.dump(), "application/json");
-    });
+    res.set_content(output.dump(), "application/json");
+  });
 
-  // Запуск прослушивания сетевых запросов
-  if (!svr.listen(host.c_str(), port)) {
-    std::cerr << " Failed to start httplib server" << std::endl;
-    return 1;
-  }
+  /* Конец вставки. */
+
+  // Эта функция запускает сервер на указанном порту. Программа не завершится
+  // до тех пор, пока сервер не будет остановлен.
+  svr.listen("0.0.0.0", port);
 
   return 0;
 }

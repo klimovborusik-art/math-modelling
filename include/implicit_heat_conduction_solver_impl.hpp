@@ -1,7 +1,9 @@
 /**
  * @file include/implicit_heat_conduction_solver_impl.hpp
  * @author BorisKlimov
+ * @brief Реализация неявного метода решения уравнения теплопроводности.
  */
+
 #ifndef INCLUDE_IMPLICIT_HEAT_CONDUCTION_SOLVER_IMPL_HPP_
 #define INCLUDE_IMPLICIT_HEAT_CONDUCTION_SOLVER_IMPL_HPP_
 
@@ -10,34 +12,49 @@
 #include <cmath>
 #include <algorithm>
 #include <vector>
+#include <stdexcept>
 
 namespace mm {
 
 template<typename T>
 ImplicitHeatConductionSolver<T>::ImplicitHeatConductionSolver(
-  T tau, T finishTime, T exportPeriod, int M) :
+    T tau, T finishTime, T exportPeriod, int M) :
   AbstractSolver<T>(tau, finishTime, exportPeriod),
   M(M),
-  h(T(1) / M),
+  h(M > 0 ? T(1) / M : T(1)),
   u((M + 1) * (M + 1)),
   uNext((M + 1) * (M + 1)) {
   auto ind = [&](int p, int q) { return p * (M + 1) + q; };
 
-  // Начальное заполнение сетки при t=0 (согласовано с ГУ справа)
+  if (M <= 0) {
+    throw std::invalid_argument("M must be positive");
+  }
+
+  // Начальное заполнение сетки при t = 0
   for (int i = 0; i <= M; ++i) {
     for (int j = 0; j <= M; ++j) {
       u[ind(i, j)] = T(-1);
     }
   }
 
-  // Граничные условия Дирихле при t=0
+  // Граничные условия (начальный момент времени)
+  // Верхняя граница (y = 1): u = -x
   for (int j = 0; j <= M; ++j) {
-    u[ind(M, j)] = -j * h;       // Сверху: u = -x
+    u[ind(M, j)] = -j * h;
   }
+
+  // Левая граница (x = 0): u = y - 1
+  // Правая граница (x = 1): u = -1
   for (int i = 0; i <= M; ++i) {
-    u[ind(i, 0)] = i * h - T(1);  // Слева: u = y - 1
-    u[ind(i, M)] = T(-1);         // Справа: u = -1
+    u[ind(i, 0)] = i * h - T(1);
+    u[ind(i, M)] = T(-1);
   }
+
+  // Нижняя граница (y = 0): du/dy = 0 (условие Неймана)
+  for (int j = 1; j < M; ++j) {
+    u[ind(0, j)] = u[ind(1, j)];
+  }
+
   uNext = u;
 }
 
@@ -50,11 +67,11 @@ bool ImplicitHeatConductionSolver<T>::MakeStep() {
 
   std::vector<T> uOldIter = uNext;
 
-  // Итерационный метод Якоби для неявного шага СЛАУ
+  // Итерационный метод Якоби для неявной разностной схемы
   for (int iter = 0; iter < maxIters; ++iter) {
     std::vector<std::future<void>> futures;
 
-    // Распараллеливаем вычисления внутренних точек по строкам i
+    // Распараллеливание вычислений по строкам
     for (int i = 1; i < M; ++i) {
       futures.push_back(std::async(std::launch::async,
         [i, this, factor, ind, &uOldIter]() {
@@ -67,25 +84,29 @@ bool ImplicitHeatConductionSolver<T>::MakeStep() {
         }));
     }
 
-    // Синхронизируем потоки выполнения
+    // Ожидание завершения всех потоков
     for (auto& f : futures) {
       f.wait();
     }
 
-    // Применяем граничные условия для нового приближения
+    // Применение граничных условий к новому приближению
+    // Верхняя граница: u = -x
     for (int j = 0; j <= M; ++j) {
-      uNext[ind(M, j)] = -j * h;       // Сверху
+      uNext[ind(M, j)] = -j * h;
     }
+
+    // Левая и правая границы
     for (int i = 1; i <= M; ++i) {
-      uNext[ind(i, 0)] = i * h - T(1);  // Слева
-      uNext[ind(i, M)] = T(-1);         // Справа
+      uNext[ind(i, 0)] = i * h - T(1);  // u = y - 1
+      uNext[ind(i, M)] = T(-1);         // u = -1
     }
+
+    // Нижняя граница: du/dy = 0
     for (int j = 1; j < M; ++j) {
-      // Снизу (Нейман: du/dy = 0)
       uNext[ind(0, j)] = uNext[ind(1, j)];
     }
 
-    // Проверка сходимости Якоби
+    // Проверка сходимости метода Якоби
     T maxDiff = T(0);
     for (int i = 1; i < M; ++i) {
       for (int j = 1; j < M; ++j) {
@@ -95,12 +116,17 @@ bool ImplicitHeatConductionSolver<T>::MakeStep() {
     }
 
     uOldIter = uNext;
+
     if (maxDiff < eps) {
       break;
     }
   }
 
   u = uNext;
+
+  // Обновление текущего времени
+  this->t += this->tau;
+
   return true;
 }
 
@@ -108,6 +134,7 @@ template<typename T>
 void ImplicitHeatConductionSolver<T>::ExportData(nlohmann::json* output) {
   (*output)["M"] = M;
   (*output)["fn"] = nlohmann::json::array();
+
   for (int i = 0; i <= M; ++i) {
     for (int j = 0; j <= M; ++j) {
       (*output)["fn"].push_back(u[i * (M + 1) + j]);
