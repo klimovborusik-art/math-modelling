@@ -1,9 +1,7 @@
 /**
  * @file methods/implicit_heat_conduction_solver_method.cpp
  * @author BorisKlimov
- *
- * Парсер входных данных и инициализатор для класса
- * mm::ImplicitHeatConductionSolver.
+ * @brief Парсер входных данных и инициализатор для класса mm::ImplicitHeatConductionSolver.
  */
 
 #include <string>
@@ -16,12 +14,29 @@ using mm::ImplicitHeatConductionSolver;
 
 namespace mm {
 
+/**
+ * @brief Вспомогательная шаблонная функция для парсера входных данных и
+ * инициализатора класса mm::ImplicitHeatConductionSolver.
+ * @tparam T Тип данных (float или double).
+ * @tparam Wrapper Тип обертки для задачи.
+ * @param input Входной JSON с параметрами.
+ * @param output Выходной JSON с ID задачи.
+ * @param tasksQueue Очередь задач сервера.
+ * @return int 0 в случае успеха, -1 при ошибке.
+ */
 template<typename T, typename Wrapper>
 int ImplicitHeatConductionSolverMethodHelper(
   const nlohmann::json& input,
   nlohmann::json* output,
   TasksQueue* tasksQueue);
 
+/**
+ * @brief Основной обработчик метода неявной теплопроводности.
+ * @param input Входной JSON от клиента.
+ * @param output Ответ сервера для клиента.
+ * @param tasksQueue Очередь асинхронных задач.
+ * @return int 0 в случае успеха, -1 при ошибке.
+ */
 int ImplicitHeatConductionSolverMethod(
   const nlohmann::json& input,
   nlohmann::json* output,
@@ -39,10 +54,6 @@ int ImplicitHeatConductionSolverMethod(
   return -1;
 }
 
-/**
- * @brief Вспомогательная шаблонная функция для парсера входных данных и
- * инициализатора класса mm::ImplicitHeatConductionSolver.
- */
 template<typename T, typename Wrapper>
 int ImplicitHeatConductionSolverMethodHelper(
   const nlohmann::json& input,

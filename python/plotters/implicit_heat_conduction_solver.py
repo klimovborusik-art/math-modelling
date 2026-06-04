@@ -51,4 +51,3 @@ class ImplicitHeatConductionSolverPlotter:
         plt.close()
 
         print(f" График успешно сохранен: {output_path}")
-        

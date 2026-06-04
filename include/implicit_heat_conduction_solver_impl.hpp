@@ -56,7 +56,6 @@ bool ImplicitHeatConductionSolver<T>::MakeStep() {
 
     // Распараллеливаем вычисления внутренних точек по строкам i
     for (int i = 1; i < M; ++i) {
-/// @cond DOXYGEN_IGNORE
       futures.push_back(std::async(std::launch::async,
         [i, this, factor, ind, &uOldIter]() {
           for (int j = 1; j < M; ++j) {
@@ -66,7 +65,6 @@ bool ImplicitHeatConductionSolver<T>::MakeStep() {
               (T(1) + T(4) * factor);
           }
         }));
-/// @endcond
     }
 
     // Синхронизируем потоки выполнения
