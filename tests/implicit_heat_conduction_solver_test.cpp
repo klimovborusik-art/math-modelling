@@ -102,7 +102,7 @@ void TestImplicitHeatConductionSolver(httplib::Client* cli) {
     auto& data = lastFrame.at("data").at("fn");
 
     REQUIRE(M > 0);
-    REQUIRE(data.size() == static_cast<size_t>(M));
+    REQUIRE(data.size() == static_cast<size_t>((M + 1) * (M + 1)));
 
     // Check boundary conditions and maximum principle
     const double precision = 1e-6;
