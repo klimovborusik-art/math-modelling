@@ -1,4 +1,4 @@
-**
+/**
  * @file tests/implicit_heat_conduction_solver_test.cpp
  * @author BorisKlimov
  * @brief Набор модульных тестов для неявного метода теплопроводности.

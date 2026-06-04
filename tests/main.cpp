@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
   }
 
     /* Сюда нужно вставить вызов набора тестов для алгоритма. */
-      TestHeatImplicitSolver(&cli);
+      TestImplicitHeatConductionSolver(&cli);
     /* Конец вставки. */
 
   // Отправляем GET запрос для остановки сервера.
