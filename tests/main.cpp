@@ -48,10 +48,7 @@ int main(int argc, char* argv[]) {
   }
 
     /* Сюда нужно вставить вызов набора тестов для алгоритма. */
-    {
-        TestSuite suite("Heat");
-        RUN_TEST(suite, TestImplicitHeatConductionSolver);
-    }  
+      TestHeatImplicitSolver(&cli);
     /* Конец вставки. */
 
   // Отправляем GET запрос для остановки сервера.

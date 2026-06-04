@@ -1,8 +1,7 @@
 /**
  * @file tests/test.hpp
  * @author BorisKlimov
- *
- * Заголовочный файл со списками прототипов тестов.
+ * @brief Заголовочный файл со списками прототипов тестов.
  */
 
 #ifndef TESTS_TEST_HPP_
@@ -14,9 +13,8 @@
 
 /**
  * @brief Набор тестов для класса mm::ImplicitHeatConductionSolver.
- * @param cli Указатель на HTTP клиент.
  */
-void TestImplicitHeatConductionSolver();
+void TestImplicitHeatConductionSolver(httplib::Client* cli);
 
 /* Конец вставки. */
 
