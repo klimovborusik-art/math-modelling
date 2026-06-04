@@ -1,106 +1,149 @@
 /**
  * @file tests/implicit_heat_conduction_solver_test.cpp
  * @author BorisKlimov
- * @brief Набор модульных тестов для неявного метода теплопроводности.
+ * @brief Набор модульных тестов для 2D неявного метода теплопроводности.
  */
 
-#include <cassert>
-#include <cmath>
+#include <httplib.h>
+#include <cstdio>
+#include <string>
+#include <vector>
 #include <iostream>
-#include <random>
+#include <nlohmann/json.hpp>
+#include <thread>
+#include <chrono>
 #include "test.hpp"
-#include <implicit_heat_conduction_solver.hpp>
+#include "test_core.hpp"
 
-/**
- * @brief Функция запуска набора модульных тестов для проверки
- * класса mm::ImplicitHeatConductionSolver.
- * 
- * Тестирование включает:
- * 1. Проверку базовой размерности сетки.
- * 2. Проверку граничного условия Дирихле на правой границе.
- * 3. Тест со случайными параметрами пространственного разбиения сетки.
- */
-void TestImplicitHeatConductionSolver() {
-  std::cout << "TestImplicitHeatConductionSolver..." << std::endl;
+void TestImplicitHeatConductionSolver(httplib::Client* cli)
+{
+  // -------------------------------------------------------------------------
+  // 1. Отправка задачи на сервер (2D параметры)
+  // -------------------------------------------------------------------------
+  nlohmann::json input = R"(
+{
+  "value_type": "double",
+  "Nx": 50,
+  "Ny": 50,
+  "tau": 0.0001,
+  "finish_time": 0.01,
+  "export_period": 0.002
+}
+)"_json;
 
-  // ---------------------------------------------------------------------------
-  // Тест 1: Проверка базовой размерности сетки (Статический тест)
-  // ---------------------------------------------------------------------------
-  {
-    double tau = 0.01;
-    double finishTime = 0.02;  // Выполнится ровно 2 шага (0.01, 0.02)
-    double exportPeriod = 0.01;
-    int M = 4;  // Размерность сетки (M+1)x(M+1) = 5x5 = 25 точек
+  auto res = cli->Post("/ImplicitHeatConductionSolver", input.dump(),
+                       "application/json");
 
-    mm::ImplicitHeatConductionSolver<double> solver(
-      tau, finishTime, exportPeriod, M);
-
-    // Запуск пустой заглушки/алгоритма для компиляции шаблона
-    bool status = solver.MakeStep();
-    assert(status == true);
-
-    nlohmann::json output;
-    solver.ExportData(&output);
-
-    assert(output.contains("M"));
-    assert(output.contains("fn"));
-    assert(output["M"].get<int>() == M);
-
-    // Общее количество точек на слое должно быть (M + 1) * (M + 1) = 25
-    assert(output["fn"].size() == static_cast<size_t>((M + 1) * (M + 1)));
+  if (!res) {
+    REQUIRE(false);
   }
 
-  // ---------------------------------------------------------------------------
-  // Тест 2: Проверка граничного условия Дирихле справа (Статический тест)
-  // ---------------------------------------------------------------------------
+  nlohmann::json output = nlohmann::json::parse(res->body);
+  REQUIRE(output.find("id") != output.end());
+
+  int taskId = output["id"];
+
+  // -------------------------------------------------------------------------
+  // 2. Ожидание завершения задачи
+  // -------------------------------------------------------------------------
+  const int numTries = 200;
+  bool success = false;
+
+  for (int k = 0; k < numTries; ++k) {
+    char buffer[1024];
+    const char* format = R"({"id": %d})";
+    snprintf(buffer, sizeof(buffer), format, taskId);
+
+    auto statusRes = cli->Post("/CheckTaskStatus", buffer,
+                               "application/json");
+
+    if (!statusRes) {
+      REQUIRE(false);
+    }
+
+    nlohmann::json statusOutput = nlohmann::json::parse(statusRes->body);
+    std::string status = statusOutput.at("status");
+
+    if (status == "finished") {
+      success = true;
+      break;
+    }
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+  }
+
+  REQUIRE(success);
+
+  // -------------------------------------------------------------------------
+  // 3. Загрузка и проверка результатов
+  // -------------------------------------------------------------------------
   {
-    double tau = 0.005;
-    double finishTime = 0.005;
-    double exportPeriod = 0.005;
-    int M = 10;
+    char buffer[1024];
+    const char* format = R"({"id": %d})";
+    snprintf(buffer, sizeof(buffer), format, taskId);
 
-    mm::ImplicitHeatConductionSolver<double> solver(
-      tau, finishTime, exportPeriod, M);
+    auto dataRes = cli->Post("/DownloadTaskData", buffer,
+                             "application/json");
 
-    solver.MakeStep();
+    if (!dataRes) {
+      REQUIRE(false);
+    }
 
-    nlohmann::json output;
-    solver.ExportData(&output);
-    auto fn = output["fn"];
+    nlohmann::json dataOutput = nlohmann::json::parse(dataRes->body);
+    REQUIRE(dataOutput.at("status") == "ok");
 
-    // Справа (при j = M) условие Дирихле u = -1
-    // Индекс в одномерном векторе: i * (M + 1) + M
-    for (int i = 0; i <= M; ++i) {
-      double uRight = fn[i * (M + 1) + M].get<double>();
-      assert(std::abs(uRight - (-1.0)) < 1e-6);
+    int numFrames = dataOutput.at("data").size();
+    REQUIRE(numFrames > 0);
+
+    auto& lastFrame = dataOutput.at("data").back();
+    int Nx = lastFrame.at("data").at("Nx");
+    int Ny = lastFrame.at("data").at("Ny");
+    auto& data = lastFrame.at("data").at("fn");
+
+    REQUIRE(Nx > 0);
+    REQUIRE(Ny > 0);
+    REQUIRE(data.size() == static_cast<size_t>(Nx * Ny));
+
+    // -----------------------------------------------------------------------
+    // Проверка граничных условий для 2D задачи
+    // -----------------------------------------------------------------------
+    const double precision = 1e-6;
+
+    // Левая граница (x = 0): u = y - 1
+    for (int i = 0; i < Ny; ++i) {
+      double y = static_cast<double>(i) / (Ny - 1);
+      double expected = y - 1.0;
+      double value = data[i * Nx + 0];
+      REQUIRE_CLOSE(value, expected, precision);
+    }
+
+    // Правая граница (x = 1): u = -1
+    for (int i = 0; i < Ny; ++i) {
+      double value = data[i * Nx + (Nx - 1)];
+      REQUIRE_CLOSE(value, -1.0, precision);
+    }
+
+    // Нижняя граница (y = 0): du/dy = 0
+    // Проверяем близость значений на y=0 и y=dy
+    for (int j = 0; j < Nx; ++j) {
+      double valueBottom = data[0 * Nx + j];
+      double valueNext = data[1 * Nx + j];
+      REQUIRE(std::abs(valueBottom - valueNext) < 0.01);
+    }
+
+    // Верхняя граница (y = 1): u = -x
+    for (int j = 0; j < Nx; ++j) {
+      double x = static_cast<double>(j) / (Nx - 1);
+      double expected = -x;
+      double value = data[(Ny - 1) * Nx + j];
+      REQUIRE_CLOSE(value, expected, precision);
+    }
+
+    // Принцип максимума: решение между min и max граничных условий
+    // min = -1 (правый край), max = 0 (левая граница при y=1: u = 1-1=0)
+    for (double value : data) {
+      REQUIRE(value <= 0.001 && value >= -1.001);
     }
   }
-
-  // ---------------------------------------------------------------------------
-  // Тест 3: Тест со случайными параметрами разбиения (Случайный тест)
-  // ---------------------------------------------------------------------------
-  {
-    std::mt19937 gen(1337);
-    std::uniform_int_distribution<int> distM(5, 15);
-
-    int randM = distM(gen);
-    double tau = 0.001;
-    double finishTime = 0.001;
-    double exportPeriod = 0.001;
-
-    mm::ImplicitHeatConductionSolver<double> solver(
-      tau, finishTime, exportPeriod, randM);
-
-    assert(solver.MakeStep() == true);
-
-    nlohmann::json output;
-    solver.ExportData(&output);
-
-    assert(output["M"].get<int>() == randM);
-    assert(output["fn"].size() ==
-      static_cast<size_t>((randM + 1) * (randM + 1)));
-  }
-
-  std::cout << "TestImplicitHeatConductionSolver passed"
-            << std::endl;
 }
+

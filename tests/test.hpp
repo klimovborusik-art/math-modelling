@@ -1,7 +1,7 @@
 /**
  * @file tests/test.hpp
- * @author BorisKlimov
- * @brief Заголовочный файл со списками прототипов тестов.
+ * @author BorisKlimov 
+ * @brief Header file with test prototypes.
  */
 
 #ifndef TESTS_TEST_HPP_
