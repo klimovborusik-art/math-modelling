@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
   }
 
   /* Сюда нужно вставить вызов набора тестов для алгоритма. */
-  RUN_TEST("ImplicitHeatConductionSolverTest", mm::ImplicitHeatConductionSolverTest);
+  RUN_TEST(suite, ImplicitHeatConductionSolverTest);
   /* Конец вставки. */
 
   // Отправляем GET запрос для остановки сервера.
