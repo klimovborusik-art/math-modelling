@@ -8,6 +8,16 @@
 #ifndef TESTS_TEST_HPP_
 #define TESTS_TEST_HPP_
 
-void TestImplicitHeatConductionSolver();
+#include <httplib.h>
+
+/* Сюда нужно добавить объявления тестовых функций. */
+
+/**
+ * @brief Набор тестов для класса mm::ImplicitHeatConductionSolver.
+ * @param cli Указатель на HTTP клиент.
+ */
+void TestImplicitHeatConductionSolver(httplib::Client* cli);
+
+/* Конец вставки. */
 
 #endif  // TESTS_TEST_HPP_
