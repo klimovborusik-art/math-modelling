@@ -1,8 +1,7 @@
-/**
+**
  * @file tests/implicit_heat_conduction_solver_test.cpp
  * @author BorisKlimov
- *
- * Набор модульных тестов для неявного метода теплопроводности.
+ * @brief Набор модульных тестов для неявного метода теплопроводности.
  */
 
 #include <cassert>
@@ -12,6 +11,15 @@
 #include "test.hpp"
 #include <implicit_heat_conduction_solver.hpp>
 
+/**
+ * @brief Функция запуска набора модульных тестов для проверки
+ * класса mm::ImplicitHeatConductionSolver.
+ * 
+ * Тестирование включает:
+ * 1. Проверку базовой размерности сетки.
+ * 2. Проверку граничного условия Дирихле на правой границе.
+ * 3. Тест со случайными параметрами пространственного разбиения сетки.
+ */
 void TestImplicitHeatConductionSolver() {
   std::cout << "TestImplicitHeatConductionSolver..." << std::endl;
 
